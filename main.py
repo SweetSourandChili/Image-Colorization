@@ -1,6 +1,7 @@
+import torch
 
-
-
+mat = torch.Tensor(3,3)
+print(mat)
 
 
 
