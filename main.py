@@ -1,28 +1,103 @@
+batch_size = 16
+max_num_epoch = 1
+hps = {'lr':0.001}
+
+# ---- options ----
+DEVICE_ID = 'cpu' # set to 'cpu' for cpu, 'cuda' / 'cuda:0' or similar for gpu.
+LOG_DIR = 'checkpoints'
+VISUALIZE = False # set True to visualize input, prediction and the output from the last batch
+LOAD_CHKPT = False
+
+# --- imports ---
 import torch
-import numpy as np
-import timeit
-import math
-from PIL import Image
 import os
 import matplotlib.pyplot as plt
+import numpy as np
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+import torchvision.transforms as transforms
+import hw3utils
+torch.multiprocessing.set_start_method('spawn', force=True)
 
-train_path = "/Users/ardameric/Desktop/5.Y/CENG 483/ceng483_hw3/src/train/images"
-val_path = "/Users/ardameric/Desktop/5.Y/CENG 483/ceng483_hw3/src/val/images"
+# ---- utility functions -----
+def get_loaders(batch_size,device):
+    data_root = 'ceng483-f22-hw3-dataset' 
+    train_set = hw3utils.HW3ImageFolder(root=os.path.join(data_root,'train'),device=device)
+    train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=0)
+    val_set = hw3utils.HW3ImageFolder(root=os.path.join(data_root,'val'),device=device)
+    val_loader = torch.utils.data.DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=0)
+    # Note: you may later add test_loader to here.
+    return train_loader, val_loader
+
+# ---- ConvNet -----
+class Net(nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+        self.conv1 = nn.Conv2d(1, 5, 3, padding=2)
+        self.conv2 = nn.Conv2d(5,25,3,padding=2)
+
+        self.fc1 = nn.Linear(25*3*3, 64)
+        self.fc2 = nn.Linear(64,16)
+        self.fc3 = nn.Linear(16,1)
+
+    def forward(self, grayscale_image):
+        # apply your network's layers in the following lines:      
+        x = F.max_pool2d(F.relu(self.conv1(grayscale_image)),2)
+        x = F.max_pool2d(F.relu(self.conv2(x)),2)
+        x = torch.flatten(x,1)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+
+# ---- training code -----
+device = torch.device(DEVICE_ID)
+print('device: ' + str(device))
+net = Net().to(device=device)
+criterion = nn.MSELoss()
+optimizer = optim.SGD(net.parameters(), lr=hps['lr'])
+train_loader, val_loader = get_loaders(batch_size,device)
 
 
-def load_images_from_folder(folder):
-    images = []
-    for filename in os.listdir(folder):
-        img = Image.open(os.path.join(folder,filename))
-        if img is not None:
-            images.append(img)
-    return images
-
-
-if __name__ == '__main__':
-    train_images = load_images_from_folder(train_path)
-    plt.imshow(train_images[0])
-    plt.show()
 
 
 
+
+if LOAD_CHKPT:
+    print('loading the model from the checkpoint')
+    model.load_state_dict(os.path.join(LOG_DIR,'checkpoint.pt'))
+
+print('training begins')
+for epoch in range(max_num_epoch):  
+    running_loss = 0.0 # training loss of the network
+    for iteri, data in enumerate(train_loader, 0):
+        inputs, targets = data # inputs: low-resolution images, targets: high-resolution images.
+
+        optimizer.zero_grad() # zero the parameter gradients
+
+        # do forward, backward, SGD step
+        preds = net(inputs)
+        loss = criterion(preds, targets)
+        loss.backward()
+        optimizer.step()
+
+        # print loss
+        running_loss += loss.item()
+        print_n = 100 # feel free to change this constant
+        if iteri % print_n == (print_n-1):    # print every print_n mini-batches
+            print('[%d, %5d] network-loss: %.3f' %
+                  (epoch + 1, iteri + 1, running_loss / 100))
+            running_loss = 0.0
+            # note: you most probably want to track the progress on the validation set as well (needs to be implemented)
+
+        if (iteri==0) and VISUALIZE: 
+            hw3utils.visualize_batch(inputs,preds,targets)
+
+    print('Saving the model, end of epoch %d' % (epoch+1))
+    if not os.path.exists(LOG_DIR):
+        os.makedirs(LOG_DIR)
+    torch.save(net.state_dict(), os.path.join(LOG_DIR,'checkpoint.pt'))
+    hw3utils.visualize_batch(inputs,preds,targets,os.path.join(LOG_DIR,'example.png'))
+
+print('Finished Training')
