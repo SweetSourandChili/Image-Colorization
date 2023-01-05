@@ -68,7 +68,7 @@ if LOAD_CHKPT:
     print('loading the model from the checkpoint')
     model.load_state_dict(os.path.join(LOG_DIR, 'checkpoint.pt'))
 
-
+last_val_loss = float("inf")
 print('training begins')
 for epoch in range(max_num_epoch):
     running_loss = 0.0  # training loss of the network
@@ -83,15 +83,7 @@ for epoch in range(max_num_epoch):
         loss = criterion(preds, targets)
         loss.backward()
         optimizer.step()
-
-        # print loss
         running_loss += loss.item()
-        print_n = 100  # feel free to change this constant
-        if iteri % print_n == (print_n - 1):  # print every print_n mini-batches
-            print('[%d, %5d] network-loss: %.3f' %
-                  (epoch + 1, iteri + 1, running_loss / 100))
-            running_loss = 0.0
-            # note: you most probably want to track the progress on the validation set as well (needs to be implemented)
 
         if (iteri == 0) and VISUALIZE:
             hw3utils.visualize_batch(inputs, preds, targets)
@@ -101,5 +93,22 @@ for epoch in range(max_num_epoch):
         os.makedirs(LOG_DIR)
     torch.save(net.state_dict(), os.path.join(LOG_DIR, 'checkpoint.pt'))
     hw3utils.visualize_batch(inputs, preds, targets, os.path.join(LOG_DIR, 'example.png'))
+
+    # validation loss
+    with torch.no_grad():
+        val_loss = 0.0
+        for ind, (val_inputs, val_targets) in enumerate(val_loader):
+            val_preds = net.forward(val_inputs)
+            val_loss_iter = criterion(val_preds, val_targets)
+            val_loss += val_loss_iter.item()
+    print('Epoch = {} | Train Loss = {:.2f}\tVal Loss = {:.2f}'.format(epoch+1, running_loss, val_loss))
+    # stop epochs if not improving
+    print(last_val_loss-val_loss)
+    if (last_val_loss - val_loss) < 0.1:
+        print("The number of epochs of the model is: %d" % (epoch + 1))
+        break
+    last_val_loss = val_loss
+    val_loss = 0.0
+    running_loss = 0.0
 
 print('Finished Training')
