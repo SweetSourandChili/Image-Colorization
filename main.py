@@ -9,14 +9,14 @@ import torchvision.transforms as transforms
 import hw3utils
 
 batch_size = 16
-max_num_epoch = 10
+max_num_epoch = 100
 hps = {'lr': 0.001}
 num_kernels = 8
 
 # ---- options ----
 DEVICE_ID = 'cpu'  # set to 'cpu' for cpu, 'cuda' / 'cuda:0' or similar for gpu.
 LOG_DIR = 'checkpoints'
-VISUALIZE = True  # set True to visualize input, prediction and the output from the last batch
+VISUALIZE = False  # set True to visualize input, prediction and the output from the last batch
 LOAD_CHKPT = False
 
 torch.multiprocessing.set_start_method('spawn', force=True)
