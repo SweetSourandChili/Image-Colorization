@@ -11,11 +11,12 @@ import hw3utils
 batch_size = 16
 max_num_epoch = 10
 hps = {'lr': 0.001}
+num_kernels = 8
 
 # ---- options ----
 DEVICE_ID = 'cpu'  # set to 'cpu' for cpu, 'cuda' / 'cuda:0' or similar for gpu.
 LOG_DIR = 'checkpoints'
-VISUALIZE = False  # set True to visualize input, prediction and the output from the last batch
+VISUALIZE = True  # set True to visualize input, prediction and the output from the last batch
 LOAD_CHKPT = False
 
 torch.multiprocessing.set_start_method('spawn', force=True)
@@ -39,24 +40,18 @@ def get_loaders(batch_size, device):
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(1, 8, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(8, 8, kernel_size=3, padding=1)
-        self.conv3 = nn.Conv2d(8, 8, kernel_size=3, padding=1)
-
+        self.conv1 = nn.Conv2d(1, num_kernels, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(num_kernels, num_kernels, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(num_kernels, num_kernels, kernel_size=3, padding=1)
+        self.conv4 = nn.Conv2d(num_kernels, 3, kernel_size=3, padding=1)
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.fc1 = nn.Linear(10 * 10 * 8, 4096)
-        self.fc2 = nn.Linear(4096, 4096)
-        self.fc3 = nn.Linear(4096, 3 * 80 * 80)
 
     def forward(self, grayscale_image):
         # apply your network's layers in the following lines:
-        x = self.pool(F.relu(self.conv1(grayscale_image)))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = self.pool(F.relu(self.conv3(x)))
-        x = x.view(-1, 10 * 10 * 8)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = F.relu(self.conv1(grayscale_image))
+        x = F.relu(self.conv2(x))
+        x = F.relu(self.conv3(x))
+        x = self.conv4(x)
         x = x.view(-1, 3, 80, 80)
         return x
 
@@ -73,12 +68,14 @@ if LOAD_CHKPT:
     print('loading the model from the checkpoint')
     model.load_state_dict(os.path.join(LOG_DIR, 'checkpoint.pt'))
 
+
 print('training begins')
 for epoch in range(max_num_epoch):
     running_loss = 0.0  # training loss of the network
     for iteri, data in enumerate(train_loader, 0):
         inputs, targets = data  # inputs: low-resolution images, targets: high-resolution images.
 
+        net.train()
         optimizer.zero_grad()  # zero the parameter gradients
 
         # do forward, backward, SGD step

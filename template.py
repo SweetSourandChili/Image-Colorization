@@ -16,7 +16,7 @@ hps = {'lr':0.001}
 # ---- options ----
 DEVICE_ID = 'cpu' # set to 'cpu' for cpu, 'cuda' / 'cuda:0' or similar for gpu.
 LOG_DIR = 'checkpoints'
-VISUALIZE = False # set True to visualize input, prediction and the output from the last batch
+VISUALIZE = True # set True to visualize input, prediction and the output from the last batch
 LOAD_CHKPT = False
 
 # --- imports ---
