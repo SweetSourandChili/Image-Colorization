@@ -9,7 +9,7 @@ import torchvision.transforms as transforms
 import hw3utils
 
 batch_size = 16
-max_num_epoch = 3
+max_num_epoch = 100
 num_kernels = (2, 4, 8)
 learning_rates = (0.0001, 0.001, 0.1)
 conv_layers = (1, 2, 4)
@@ -103,11 +103,13 @@ def train_model(conv_layer, num_kernel, lr):
             if (iteri == 0) and VISUALIZE:
                 hw3utils.visualize_batch(inputs, preds, targets)
 
+        print(epoch+1, end="-")
         if SAVE_MODEL:
             print('Saving the model, end of epoch %d' % (epoch + 1))
             if not os.path.exists(LOG_DIR):
                 os.makedirs(LOG_DIR)
             torch.save(net.state_dict(), os.path.join(LOG_DIR, 'checkpoint.pt'))
+
         hw3utils.visualize_batch(inputs, preds, targets, os.path.join(LOG_DIR, 'example.png'))
 
         # validation loss
