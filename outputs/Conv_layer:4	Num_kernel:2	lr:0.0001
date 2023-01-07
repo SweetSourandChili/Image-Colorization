@@ -1,0 +1,5 @@
+Epoch = 1 | Train Loss = 49.45	Val Loss = 19.12
+Epoch = 2 | Train Loss = 48.83	Val Loss = 18.88
+Epoch = 3 | Train Loss = 48.26	Val Loss = 18.67
+Epoch = 4 | Train Loss = 47.75	Val Loss = 18.47
+Epoch = 5 | Train Loss = 47.26	Val Loss = 18.29

@@ -1,0 +1,16 @@
+Epoch = 1 | Train Loss = 51.79	Val Loss = 16.68
+Epoch = 2 | Train Loss = 35.38	Val Loss = 11.50
+Epoch = 3 | Train Loss = 24.59	Val Loss = 8.10
+Epoch = 4 | Train Loss = 17.52	Val Loss = 5.87
+Epoch = 5 | Train Loss = 12.88	Val Loss = 4.40
+Epoch = 6 | Train Loss = 9.82	Val Loss = 3.44
+Epoch = 7 | Train Loss = 7.81	Val Loss = 2.81
+Epoch = 8 | Train Loss = 6.49	Val Loss = 2.39
+Epoch = 9 | Train Loss = 5.61	Val Loss = 2.11
+Epoch = 10 | Train Loss = 5.04	Val Loss = 1.93
+Epoch = 11 | Train Loss = 4.66	Val Loss = 1.81
+Epoch = 12 | Train Loss = 4.41	Val Loss = 1.73
+Epoch = 13 | Train Loss = 4.24	Val Loss = 1.68
+Epoch = 14 | Train Loss = 4.13	Val Loss = 1.65
+Epoch = 15 | Train Loss = 4.05	Val Loss = 1.62
+Epoch = 16 | Train Loss = 4.00	Val Loss = 1.61

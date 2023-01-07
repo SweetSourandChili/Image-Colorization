@@ -114,6 +114,7 @@ def train_model(conv_layer, num_kernel, lr):
 
         # validation loss
         with torch.no_grad():
+            net.eval()
             val_loss = 0.0
             for ind, (val_inputs, val_targets) in enumerate(val_loader):
                 val_preds = net.forward(val_inputs)
@@ -121,19 +122,19 @@ def train_model(conv_layer, num_kernel, lr):
                 val_loss += val_loss_iter.item()
         string_to_write += 'Epoch = {} | Train Loss = {:.2f}\tVal Loss = {:.2f}\n'.format(epoch + 1, running_loss, val_loss)
         # stop epochs if not improving
-        if (last_val_loss - val_loss) < 0.01:
+        if (last_val_loss - val_loss) / last_val_loss < 0:                   # at least 1 percent improvement needed to continue
             print("The number of epochs of the model is: %d" % (epoch + 1))
             break
         last_val_loss = val_loss
-        val_loss = 0.0
-        running_loss = 0.0
+
     write_output("Conv_layer:{}\tNum_kernel:{}\tlr:{}".format(conv_layer, num_kernel, lr), string_to_write)
     print('Finished Training')
     return net, epoch, last_val_loss
 
 
+best_conf = {"conv_layer": 1, "num_kernel": 8, "learning_rate": 0.1, "best": ""}
+"""
 least_loss = float("inf")
-best_conf = {"conv_layer": None, "num_kernel": None, "learning_rate": None, "best": ""}
 for conv_layer in conv_layers:
     for num_kernel in num_kernels:
         for learning_rate in learning_rates:
@@ -150,7 +151,7 @@ for conv_layer in conv_layers:
                 best_conf["num_kernel"] = num_kernel
                 best_conf["learning_rate"] = learning_rate
                 best_conf["best"] = configuration
-
+"""
 print("The best configuration:\n" + best_conf["best"])
 print("Train model with the best configuration...")
 model, _, _ = train_model(best_conf["conv_layer"], best_conf["num_kernel"], best_conf["learning_rate"])
