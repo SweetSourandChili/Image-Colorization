@@ -103,8 +103,8 @@ def train_model(conv_layer, num_kernel, lr):
     # ---- training code -----
     print('device: ' + str(device))
     net = Net(conv_layer, num_kernel).to(device=device)
-    # criterion = nn.MSELoss()
-    criterion = nn.MarginRankingLoss(margin=12)
+    criterion = nn.MSELoss()
+    # criterion = nn.MarginRankingLoss(margin=12)
     optimizer = optim.SGD(net.parameters(), lr=lr)
     train_loader, val_loader = get_loaders(batch_size, device)
 
@@ -122,7 +122,7 @@ def train_model(conv_layer, num_kernel, lr):
 
             # do forward, backward, SGD step
             preds = net(inputs)
-            loss = criterion(inputs * 0x00010101, preds, targets)
+            loss = criterion(preds, targets)
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
@@ -146,7 +146,7 @@ def train_model(conv_layer, num_kernel, lr):
             val_loss = 0.0
             for ind, (val_inputs, val_targets) in enumerate(val_loader):
                 val_preds = net.forward(val_inputs)
-                val_loss_iter = criterion(val_inputs* 0x00010101, val_preds, val_targets)      # convert grayscale to rgb representation
+                val_loss_iter = criterion(val_preds, val_targets)      # convert grayscale to rgb representation
                 val_loss += val_loss_iter.item()
         string_to_write += 'Epoch = {} | Train Loss = {:.2f}\tVal Loss = {:.2f}\n'.format(epoch + 1, running_loss, val_loss)
         # stop epochs if not improving
@@ -155,12 +155,12 @@ def train_model(conv_layer, num_kernel, lr):
             break
         last_val_loss = val_loss
 
-    write_output("Conv_layer:{}\tNum_kernel:{}\tlr:{}".format(conv_layer, num_kernel, lr), string_to_write)
+    write_output("Conv_layer:{}\tNum_kernel:{}\tlr:{} 16 channel".format(conv_layer, num_kernel, lr), string_to_write)
     print('\nFinished Training')
     return net, epoch, last_val_loss
 
 
-best_conf = {"conv_layer": 1, "num_kernel": 8, "learning_rate": 0.1, "best": ""}
+best_conf = {"conv_layer": 1, "num_kernel": 16, "learning_rate": 0.1, "best": ""}
 """
 least_loss = float("inf")
 for conv_layer in conv_layers:
@@ -186,7 +186,7 @@ print("The best configuration:\n" + best_conf["best"])
 print("Train model with the best configuration...")
 model, _, _ = train_model(best_conf["conv_layer"], best_conf["num_kernel"], best_conf["learning_rate"])
 
-test_images, test_names = load_images_from_folder("ceng483-f22-hw3-dataset/images_grayscale",100)
+"""test_images, test_names = load_images_from_folder("ceng483-f22-hw3-dataset/images_grayscale",100)
 transform = transforms.Compose([transforms.ToTensor()])
 
 
@@ -198,6 +198,5 @@ predictions = np.array(predictions).reshape((100, 80, 80, 3))
 np.save("estimations", predictions)
 with open("img_names.txt", 'w') as f:
     for line in test_names:
-        f.write(f"{line}\n")
-
+        f.write(f"{line}\n")"""
 
