@@ -63,7 +63,7 @@ class Net(nn.Module):
         # apply your network's layers in the following lines:
         for i in range(self.conv_layers - 1):
             x = F.relu(self.convs[i](x))
-        x = self.conv4(x)
+        x = torch.tanh(self.conv4(x))
         x = x.view(-1, 3, 80, 80)
         return x
 
@@ -80,6 +80,7 @@ def train_model(conv_layer, num_kernel, lr):
     print('device: ' + str(device))
     net = Net(conv_layer, num_kernel).to(device=device)
     criterion = nn.MSELoss()
+    margin_loss = nn.MarginRankingLoss()
     optimizer = optim.SGD(net.parameters(), lr=lr)
     train_loader, val_loader = get_loaders(batch_size, device)
 
@@ -118,11 +119,11 @@ def train_model(conv_layer, num_kernel, lr):
             val_loss = 0.0
             for ind, (val_inputs, val_targets) in enumerate(val_loader):
                 val_preds = net.forward(val_inputs)
-                val_loss_iter = criterion(val_preds, val_targets)
+                val_loss_iter = margin_loss(12, val_preds, val_targets)
                 val_loss += val_loss_iter.item()
         string_to_write += 'Epoch = {} | Train Loss = {:.2f}\tVal Loss = {:.2f}\n'.format(epoch + 1, running_loss, val_loss)
         # stop epochs if not improving
-        if (last_val_loss - val_loss) / last_val_loss < 0:                   # at least 1 percent improvement needed to continue
+        if (last_val_loss - val_loss) / last_val_loss < 0:
             print("The number of epochs of the model is: %d" % (epoch + 1))
             break
         last_val_loss = val_loss
